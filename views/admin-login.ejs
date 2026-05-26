@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="container section-card form-card">
+    <h1>Admin Login</h1>
+    <% if (error) { %>
+      <div class="alert error"><%= error %></div>
+    <% } %>
+    <form action="/admin/login" method="POST">
+      <label for="email">Gmail</label>
+      <input id="email" name="email" type="email" required />
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" required />
+      <button class="button" type="submit">Login</button>
+      <div class="link-row">
+        <a href="/admin/register">Register as Admin</a>
+        <a href="/admin/recover">Forgot Password?</a>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

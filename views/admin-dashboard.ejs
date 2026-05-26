@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <!-- Chart.js for data visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Google Fonts Outfit -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body class="dashboard-body">
+  <div class="dashboard-container">
+    
+    <!-- Top Navbar -->
+    <header class="dashboard-nav">
+      <div class="brand">
+        <span class="logo-dot"></span>
+        <h1>Feedback Analytics Hub</h1>
+      </div>
+      <div class="nav-right">
+        <div class="admin-profile-badge">
+          <div class="avatar"><%= user.name[0] %></div>
+          <div class="details">
+            <span class="name"><%= user.name %></span>
+            <span class="role"><%= user.role.toUpperCase() %> - <%= user.department %></span>
+          </div>
+        </div>
+        <a class="button logout-btn" href="/logout">Logout</a>
+      </div>
+    </header>
+
+    <div class="dashboard-grid">
+      
+      <!-- Profile & Edit Subjects Column (Left) -->
+      <aside class="sidebar-column">
+        <!-- Profile Card -->
+        <div class="glass-card profile-card">
+          <div class="profile-header">
+            <h3>Faculty Details</h3>
+          </div>
+          <div class="profile-photo-wrapper">
+            <% if (user.facultyPhoto) { %>
+              <img src="<%= user.facultyPhoto %>" alt="ID Card" class="faculty-id-img" onclick="openPhotoModal('<%= user.facultyPhoto %>')" title="Click to view full photo" />
+            <% } else { %>
+              <div class="no-photo">No ID Photo Uploaded</div>
+            <% } %>
+          </div>
+          <div class="profile-info-list">
+            <div class="info-item">
+              <span class="label">Gmail</span>
+              <span class="value"><%= user.email %></span>
+            </div>
+            <div class="info-item">
+              <span class="label">Department</span>
+              <span class="value"><%= user.department %></span>
+            </div>
+            <div class="info-item">
+              <span class="label">Subjects Taught</span>
+              <span class="value subjects-badges">
+                <% if (user.subjects && user.subjects.length > 0) { %>
+                  <% user.subjects.forEach(subject => { %>
+                    <span class="subject-badge"><%= subject %></span>
+                  <% }) %>
+                <% } else { %>
+                  <span class="no-subjects">No subjects entered (Principal role)</span>
+                <% } %>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Edit Subjects Form (Admins can only edit subjects, not other profile elements) -->
+        <div class="glass-card edit-subjects-card">
+          <h3>Edit Subjects Only</h3>
+          <p class="section-desc">You are only permitted to modify the list of subjects you teach.</p>
+          <form action="/admin/edit-subjects" method="POST" id="editSubjectsForm">
+            <div id="dynamic-subjects-container">
+              <% if (user.subjects && user.subjects.length > 0) { %>
+                <% user.subjects.forEach((subject, idx) => { %>
+                  <div class="subject-edit-row">
+                    <input name="subjects" type="text" value="<%= subject %>" required placeholder="Subject name" />
+                    <button type="button" class="remove-btn" onclick="removeSubjectField(this)">&times;</button>
+                  </div>
+                <% }) %>
+              <% } else { %>
+                <div class="subject-edit-row">
+                  <input name="subjects" type="text" placeholder="Subject name" />
+                  <button type="button" class="remove-btn" onclick="removeSubjectField(this)">&times;</button>
+                </div>
+              <% } %>
+            </div>
+            <div class="actions-row">
+              <button type="button" class="button secondary small" onclick="addSubjectField()">+ Add Subject</button>
+              <button class="button small" type="submit">Update List</button>
+            </div>
+          </form>
+        </div>
+      </aside>
+
+      <!-- Main Analytics & Feedbacks Section (Right) -->
+      <main class="main-content-column">
+        
+        <!-- Filter Bar -->
+        <div class="glass-card filter-bar-card">
+          <form class="filter-form" method="GET" action="/admin/dashboard">
+            <div class="filter-group">
+              <label for="department">Select Department to Analyze:</label>
+              <div class="custom-select-wrapper">
+                <select id="department" name="department" onchange="this.form.submit()">
+                  <option value="all" <%= selectedDepartment === 'all' ? 'selected' : '' %>>All Departments (Overview)</option>
+                  <% departments.forEach(dep => { %>
+                    <option value="<%= dep %>" <%= selectedDepartment === dep ? 'selected' : '' %>><%= dep %> Department</option>
+                  <% }) %>
+                </select>
+              </div>
+            </div>
+            <noscript>
+              <button class="button small" type="submit">Apply Filter</button>
+            </noscript>
+          </form>
+        </div>
+
+        <!-- Sentiment Quick Cards -->
+        <div class="stats-counter-row">
+          <div class="stat-card-mini positive">
+            <div class="stat-icon">😊</div>
+            <div class="stat-content">
+              <h4>Positive Feedback</h4>
+              <p class="count"><%= sentimentTotals.Positive %></p>
+            </div>
+          </div>
+          <div class="stat-card-mini neutral">
+            <div class="stat-icon">😐</div>
+            <div class="stat-content">
+              <h4>Neutral Feedback</h4>
+              <p class="count"><%= sentimentTotals.Neutral %></p>
+            </div>
+          </div>
+          <div class="stat-card-mini negative">
+            <div class="stat-icon">😞</div>
+            <div class="stat-content">
+              <h4>Negative Feedback</h4>
+              <p class="count"><%= sentimentTotals.Negative %></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Dashboard (Visually Stunning Canvas) -->
+        <div class="charts-dashboard-grid">
+          <!-- Circular Sentiment Chart -->
+          <div class="glass-card chart-container-card circular-chart-card">
+            <h3>Feedback Breakdown (Circle)</h3>
+            <p class="chart-subtitle">Sentiment Distribution Ratio</p>
+            <div class="canvas-wrapper circle-canvas">
+              <canvas id="sentimentCircularChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Academic Year Comparison Bar Chart -->
+          <div class="glass-card chart-container-card">
+            <h3>Academic Years Comparison</h3>
+            <p class="chart-subtitle">Feedback Trends by Academic Year</p>
+            <div class="canvas-wrapper">
+              <canvas id="academicYearChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Current Year Monthly Trends Bar Chart -->
+          <div class="glass-card chart-container-card monthly-chart-card">
+            <h3>Current Year Monthly Performance</h3>
+            <p class="chart-subtitle">Feedback Percentage Distribution by Month</p>
+            <div class="canvas-wrapper">
+              <canvas id="monthlyTrendsChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- All Feedback Section -->
+        <div class="glass-card feedbacks-section">
+          <div class="section-header-row">
+            <h3>Student Feedbacks List</h3>
+            <span class="results-count">Showing <%= feedbacks.length %> submissions</span>
+          </div>
+
+          <div class="feedback-cards-grid">
+            <% feedbacks.forEach(item => { %>
+              <div class="feedback-item-card sentiment-<%= item.sentiment.toLowerCase() %>">
+                
+                <!-- Attendance Shown at top for Admins only, Student details are hidden/anonymous -->
+                <div class="feedback-card-top-header">
+                  <div class="attendance-tag">
+                    <span class="lbl">Student Attendance:</span>
+                    <span class="pct"><%= item.attendance %>%</span>
+                  </div>
+                  <div class="sentiment-badge <%= item.sentiment.toLowerCase() %>">
+                    <%= item.sentiment %>
+                  </div>
+                </div>
+
+                <div class="feedback-metadata-row">
+                  <div class="meta-item">
+                    <span class="meta-label">Dept:</span>
+                    <span class="meta-val"><%= item.department %></span>
+                  </div>
+                  <div class="meta-item">
+                    <span class="meta-label">Subject:</span>
+                    <span class="meta-val"><%= item.subject %></span>
+                  </div>
+                  <div class="meta-item">
+                    <span class="meta-label">Faculty:</span>
+                    <span class="meta-val"><%= item.faculty %></span>
+                  </div>
+                </div>
+
+                <div class="feedback-text-content">
+                  <p>"<%= item.feedback %>"</p>
+                </div>
+
+                <div class="feedback-card-footer">
+                  <span class="timestamp"><%= new Date(item.submittedAt).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'}) %></span>
+                  <button class="share-btn-dashboard" onclick="shareFeedback('<%= item.subject %>', '<%= item.faculty %>', '<%= item.sentiment %>', '<%= item.attendance %>', '<%= item.feedback.replace(/'/g, "\\'") %>')">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+                    <span>Share</span>
+                  </button>
+                </div>
+              </div>
+            <% }) %>
+
+            <% if (feedbacks.length === 0) { %>
+              <div class="empty-feedbacks-state">
+                <div class="empty-icon">📂</div>
+                <p>No student feedback recorded for this filter criteria yet.</p>
+              </div>
+            <% } %>
+          </div>
+        </div>
+
+      </main>
+
+    </div>
+  </div>
+
+  <!-- Photo Full-View Lightbox Modal -->
+  <div id="photoModal" class="modal-lightbox" onclick="closePhotoModal()">
+    <span class="close-modal">&times;</span>
+    <img class="modal-content" id="modalImg">
+  </div>
+
+  <!-- Embed JSON variables safely for Chart.js -->
+  <script>
+    const sentimentTotals = <%- JSON.stringify(sentimentTotals) %>;
+    const yearsData = <%- JSON.stringify(years) %>;
+    const monthlyData = <%- JSON.stringify(monthlyData) %>;
+
+    // Helper functions for dynamic subjects editor
+    function addSubjectField() {
+      const container = document.getElementById('dynamic-subjects-container');
+      const row = document.createElement('div');
+      row.className = 'subject-edit-row';
+      row.innerHTML = `
+        <input name="subjects" type="text" required placeholder="Subject name" />
+        <button type="button" class="remove-btn" onclick="removeSubjectField(this)">&times;</button>
+      `;
+      container.appendChild(row);
+      row.querySelector('input').focus();
+    }
+
+    function removeSubjectField(button) {
+      const row = button.parentElement;
+      const container = document.getElementById('dynamic-subjects-container');
+      if (container.children.length > 1) {
+        row.remove();
+      } else {
+        // Just clear the single input value
+        row.querySelector('input').value = '';
+      }
+    }
+
+    // Modal view for Faculty ID
+    function openPhotoModal(imgSrc) {
+      document.getElementById('photoModal').style.display = "block";
+      document.getElementById('modalImg').src = imgSrc;
+    }
+
+    function closePhotoModal() {
+      document.getElementById('photoModal').style.display = "none";
+    }
+
+    // Share Feedback logic
+    async function shareFeedback(subject, faculty, sentiment, attendance, feedbackText) {
+      const shareText = `📚 *STUDENT FEEDBACK REPORT*\n\n` +
+                        `• *Department*: <%= selectedDepartment === 'all' ? 'College-wide' : selectedDepartment %>\n` +
+                        `• *Subject*: ${subject}\n` +
+                        `• *Faculty*: ${faculty}\n` +
+                        `• *Sentiment Rating*: ${sentiment}\n` +
+                        `• *Student Attendance*: ${attendance}%\n` +
+                        `• *Feedback Comments*:\n"${feedbackText}"\n\n` +
+                        `Report generated via Student Feedback Analytics Portal.`;
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Student Academic Feedback Share',
+            text: shareText
+          });
+        } catch (err) {
+          console.log('Web Share cancelled or failed: ', err);
+        }
+      } else {
+        // Fallback Clipboard Copy
+        try {
+          await navigator.clipboard.writeText(shareText);
+          showToastAlert('Feedback details copied to clipboard!');
+        } catch (err) {
+          showToastAlert('Failed to copy to clipboard.');
+        }
+      }
+    }
+
+    // Modern styled toast alert replacement for standard alert
+    function showToastAlert(message) {
+      const toast = document.createElement('div');
+      toast.className = 'toast-alert-popup';
+      toast.innerText = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.classList.add('visible');
+      }, 50);
+
+      setTimeout(() => {
+        toast.classList.remove('visible');
+        setTimeout(() => toast.remove(), 400);
+      }, 3000);
+    }
+
+    // INITIALIZE CHARTS
+    window.addEventListener('DOMContentLoaded', () => {
+      
+      // 1. circular chart (Doughnut Chart)
+      const ctxCircular = document.getElementById('sentimentCircularChart').getContext('2d');
+      const totalSentiments = sentimentTotals.Positive + sentimentTotals.Neutral + sentimentTotals.Negative;
+      
+      const circularChart = new Chart(ctxCircular, {
+        type: 'doughnut',
+        data: {
+          labels: ['Positive', 'Neutral', 'Negative'],
+          datasets: [{
+            data: [sentimentTotals.Positive, sentimentTotals.Neutral, sentimentTotals.Negative],
+            backgroundColor: [
+              'rgba(30, 191, 138, 0.85)',  // green
+              'rgba(100, 116, 139, 0.85)', // grey
+              'rgba(239, 68, 68, 0.85)'    // red
+            ],
+            borderColor: [
+              '#1ebf8a',
+              '#64748b',
+              '#ef4444'
+            ],
+            borderWidth: 2,
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                color: '#475569',
+                font: {
+                  family: 'Outfit',
+                  size: 13,
+                  weight: '500'
+                },
+                padding: 15
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const val = context.raw;
+                  const pct = totalSentiments > 0 ? ((val / totalSentiments) * 100).toFixed(1) : 0;
+                  return ` ${context.label}: ${val} (${pct}%)`;
+                }
+              }
+            }
+          },
+          cutout: '65%'
+        }
+      });
+
+      // 2. Academic Years Bar Chart
+      const ctxYear = document.getElementById('academicYearChart').getContext('2d');
+      const yearLabels = Object.keys(yearsData).sort();
+      const posYearData = [];
+      const neuYearData = [];
+      const negYearData = [];
+
+      yearLabels.forEach(year => {
+        const total = yearsData[year].Positive + yearsData[year].Neutral + yearsData[year].Negative || 1;
+        // Store percentage
+        posYearData.push(((yearsData[year].Positive / total) * 100).toFixed(1));
+        neuYearData.push(((yearsData[year].Neutral / total) * 100).toFixed(1));
+        negYearData.push(((yearsData[year].Negative / total) * 100).toFixed(1));
+      });
+
+      new Chart(ctxYear, {
+        type: 'bar',
+        data: {
+          labels: yearLabels,
+          datasets: [
+            {
+              label: 'Positive (%)',
+              data: posYearData,
+              backgroundColor: 'rgba(30, 191, 138, 0.85)',
+              borderColor: '#1ebf8a',
+              borderWidth: 1.5,
+              borderRadius: 6
+            },
+            {
+              label: 'Neutral (%)',
+              data: neuYearData,
+              backgroundColor: 'rgba(100, 116, 139, 0.85)',
+              borderColor: '#64748b',
+              borderWidth: 1.5,
+              borderRadius: 6
+            },
+            {
+              label: 'Negative (%)',
+              data: negYearData,
+              backgroundColor: 'rgba(239, 68, 68, 0.85)',
+              borderColor: '#ef4444',
+              borderWidth: 1.5,
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              title: {
+                display: true,
+                text: 'Percentage (%)',
+                color: '#475569',
+                font: { family: 'Outfit', weight: '600' }
+              },
+              grid: { color: 'rgba(226, 232, 240, 0.6)' },
+              ticks: { color: '#64748b', font: { family: 'Outfit' } }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#64748b', font: { family: 'Outfit' } }
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { color: '#475569', font: { family: 'Outfit', size: 12 } }
+            }
+          }
+        }
+      });
+
+      // 3. Current Year Monthly Bar Chart
+      const ctxMonthly = document.getElementById('monthlyTrendsChart').getContext('2d');
+      const monthLabels = monthlyData.map(m => m.label);
+      const posMonthlyData = [];
+      const neuMonthlyData = [];
+      const negMonthlyData = [];
+
+      monthlyData.forEach(month => {
+        const total = month.positive + month.neutral + month.negative || 1;
+        posMonthlyData.push(((month.positive / total) * 100).toFixed(1));
+        neuMonthlyData.push(((month.neutral / total) * 100).toFixed(1));
+        negMonthlyData.push(((month.negative / total) * 100).toFixed(1));
+      });
+
+      new Chart(ctxMonthly, {
+        type: 'bar',
+        data: {
+          labels: monthLabels,
+          datasets: [
+            {
+              label: 'Positive (%)',
+              data: posMonthlyData,
+              backgroundColor: 'rgba(30, 191, 138, 0.85)',
+              borderColor: '#1ebf8a',
+              borderWidth: 1.2,
+              borderRadius: 4
+            },
+            {
+              label: 'Neutral (%)',
+              data: neuMonthlyData,
+              backgroundColor: 'rgba(100, 116, 139, 0.85)',
+              borderColor: '#64748b',
+              borderWidth: 1.2,
+              borderRadius: 4
+            },
+            {
+              label: 'Negative (%)',
+              data: negMonthlyData,
+              backgroundColor: 'rgba(239, 68, 68, 0.85)',
+              borderColor: '#ef4444',
+              borderWidth: 1.2,
+              borderRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              title: {
+                display: true,
+                text: 'Feedback Percentage (%)',
+                color: '#475569',
+                font: { family: 'Outfit', weight: '600' }
+              },
+              grid: { color: 'rgba(226, 232, 240, 0.6)' },
+              ticks: { color: '#64748b', font: { family: 'Outfit' } }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#64748b', font: { family: 'Outfit' } }
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { color: '#475569', font: { family: 'Outfit', size: 12 } }
+            }
+          }
+        }
+      });
+
+    });
+  </script>
+</body>
+</html>

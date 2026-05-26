@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="container section-card dashboard-card">
+    <header class="dashboard-header">
+      <div>
+        <h1>Student Dashboard</h1>
+        <p>Roll: <strong><%= roll %></strong> | Department: <strong><%= department %></strong></p>
+      </div>
+      <a class="button secondary" href="/logout">Logout</a>
+    </header>
+
+    <% if (message) { %>
+      <div class="alert success">
+        <p><%= message %></p>
+        <% if (showAttendance) { %>
+          <div class="attendance-reveal" style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(28, 77, 120, 0.2);">
+            Your logged attendance percentage: <strong style="font-size: 1.15em;"><%= attendance %>%</strong>
+          </div>
+        <% } %>
+      </div>
+    <% } %>
+    <% if (error) { %>
+      <div class="alert error"><%= error %></div>
+    <% } %>
+
+    <form action="/student/submit-feedback" method="POST" class="form-grid">
+      <label for="subject">Subject Name</label>
+      <input id="subject" name="subject" type="text" required />
+
+      <label for="faculty">Faculty Name</label>
+      <input id="faculty" name="faculty" type="text" required />
+
+      <label for="feedback">Feedback</label>
+      <textarea id="feedback" name="feedback" rows="6" required placeholder="Write your feedback anonymously..."></textarea>
+
+      <button class="button" type="submit">Submit Feedback</button>
+    </form>
+
+    <p class="note">Your feedback will be submitted without attaching your roll number or name.</p>
+  </div>
+</body>
+</html>

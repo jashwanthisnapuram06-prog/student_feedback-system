@@ -1,0 +1,15 @@
+{
+  "feedbacks": [
+    {
+      "id": "011e6283-c23a-4500-83a3-3566ac4ad214",
+      "roll": "24c71a05j3",
+      "department": "CSE",
+      "attendance": 100,
+      "subject": "python",
+      "faculty": "shyam",
+      "feedback": "good",
+      "sentiment": "Positive",
+      "submittedAt": "2026-05-26T10:09:25.439Z"
+    }
+  ]
+}

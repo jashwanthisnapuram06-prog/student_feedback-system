@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subject Registration</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="container section-card form-card">
+    <h1>Subject Entry (Step 2)</h1>
+    <p class="role-badge">Role: <strong><%= role.toUpperCase() %></strong></p>
+    
+    <% if (error) { %>
+      <div class="alert error"><%= error %></div>
+    <% } %>
+
+    <form action="/admin/register-subjects" method="POST" id="subjectForm">
+      <div id="subject-container">
+        <label>Subjects Taught</label>
+        <div id="subject-list">
+          <input name="subjects" type="text" placeholder="Enter subject name" class="subject-input" />
+        </div>
+      </div>
+      
+      <div class="button-group flex-row">
+        <button type="button" class="button secondary small" onclick="addSubject()">+ Add Another Subject</button>
+      </div>
+
+      <div class="submission-actions">
+        <button class="button" type="submit" name="submitBtn">Save & Complete Registration</button>
+        
+        <% if (role.toLowerCase() === 'principal') { %>
+          <div class="divider-text">OR</div>
+          <button class="button warning-button" type="submit" name="skipBtn" value="skip" formnovalidate>
+            Skip Subject Entry
+          </button>
+        <% } %>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    function addSubject() {
+      const list = document.getElementById('subject-list');
+      const input = document.createElement('input');
+      input.name = 'subjects';
+      input.type = 'text';
+      input.placeholder = 'Enter subject name';
+      input.className = 'subject-input';
+      list.appendChild(input);
+      input.focus();
+    }
+  </script>
+</body>
+</html>

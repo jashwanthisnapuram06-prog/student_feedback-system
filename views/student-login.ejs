@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Login</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="container section-card form-card">
+    <h1>Student Login</h1>
+    <% if (error) { %>
+      <div class="alert error"><%= error %></div>
+    <% } %>
+    <form action="/student/login" method="POST">
+      <label for="roll">Roll Number</label>
+      <input id="roll" name="roll" type="text" required />
+      <label for="department">Department</label>
+      <select id="department" name="department" required>
+        <option value="">Select Department</option>
+        <option value="CSE">Computer Science & Engineering (CSE)</option>
+        <option value="ECE">Electronics & Communication Engineering (ECE)</option>
+        <option value="EEE">Electrical & Electronics Engineering (EEE)</option>
+        <option value="ME">Mechanical Engineering (ME)</option>
+        <option value="CE">Civil Engineering (CE)</option>
+        <option value="IT">Information Technology (IT)</option>
+      </select>
+      
+      <label for="attendance">Attendance Percentage</label>
+      <input id="attendance" name="attendance" type="number" max="100" required placeholder="Enter attendance percentage" />
+      <button class="button" type="submit">Login</button>
+    </form>
+  </div>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Registration</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="container section-card form-card">
+    <h1>Admin Registration</h1>
+    <% if (error) { %>
+      <div class="alert error"><%= error %></div>
+    <% } %>
+    <form action="/admin/register" method="POST" enctype="multipart/form-data">
+      <label for="name">Name</label>
+      <input id="name" name="name" type="text" required />
+
+      <label for="email">Gmail</label>
+      <input id="email" name="email" type="email" required />
+
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" required />
+
+      <label for="role">Role</label>
+      <select id="role" name="role" required>
+        <option value="">Choose role</option>
+        <option value="principal">Principal</option>
+        <option value="hod">HOD</option>
+        <option value="faculty">Faculty</option>
+        <option value="lab faculty">Lab Faculty</option>
+      </select>
+
+      <label for="department">Department</label>
+      <select id="department" name="department" required>
+        <option value="">Select Department</option>
+        <option value="CSE">Computer Science & Engineering (CSE)</option>
+        <option value="ECE">Electronics & Communication Engineering (ECE)</option>
+        <option value="EEE">Electrical & Electronics Engineering (EEE)</option>
+        <option value="ME">Mechanical Engineering (ME)</option>
+        <option value="CE">Civil Engineering (CE)</option>
+        <option value="IT">Information Technology (IT)</option>
+      </select>
+
+      <label for="facultyPhoto">Faculty ID Card Photo</label>
+      <div class="file-upload-wrapper">
+        <input id="facultyPhoto" name="facultyPhoto" type="file" accept="image/*" required />
+      </div>
+
+      <button class="button" type="submit">Proceed to Register</button>
+      <div class="link-row">
+        <a href="/admin/login">Back to Login</a>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

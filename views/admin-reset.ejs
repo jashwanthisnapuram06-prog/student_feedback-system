@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reset Admin Password</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="container section-card form-card">
+    <h1>Reset Password</h1>
+    <% if (error) { %>
+      <div class="alert error"><%= error %></div>
+    <% } %>
+    <% if (info) { %>
+      <div class="alert success"><%= info %></div>
+    <% } %>
+    <form action="/admin/reset" method="POST">
+      <label for="email">Registered Gmail</label>
+      <input id="email" name="email" type="email" value="<%= email %>" required placeholder="name@gmail.com" />
+      <label for="otp">OTP</label>
+      <input id="otp" name="otp" type="text" required />
+      <label for="password">New Password</label>
+      <input id="password" name="password" type="password" required />
+      <label for="confirmPassword">Confirm Password</label>
+      <input id="confirmPassword" name="confirmPassword" type="password" required />
+      <button class="button" type="submit">Reset Password</button>
+      <div class="link-row">
+        <a href="/admin/login">Back to Login</a>
+      </div>
+    </form>
+  </div>
+</body>
+</html>
